@@ -74,7 +74,7 @@ class Config(object):
     default_waiting_time = 1500
     audio_speed = 1.0
     regex = r"sound:[^\.\s]*\.(?:mp3|wav|m4a)"
-    mode = 0 # 1: add times in all audios, 0: get time in the first audio
+    mode = 1 # 1: add times in all audios, 0: get time in the first audio
     stdoutQueue = Queue()
     show_notif = False
 
@@ -146,16 +146,19 @@ def calculate_file_length(suffix, mp):
         audio = MP4(mp)
         length = str(audio.info.length)
         time = int(float(length) * 1000)
+    print("length of file ", mp, " ", time, length)
     return time
 
 
 def calculate_time(card, media_path, audio_fields):
+    # returns time in miliseconds
     time = 0
     audios = []
     #for field, value in card.note().items():
     for field in audio_fields:
         #if field in audio_fields:
         value = card.note()[field]
+        print("field to calc time:", value)
         position = 0
         file_names = []
         while True:
@@ -171,10 +174,16 @@ def calculate_time(card, media_path, audio_fields):
     if Config.mode == 0:
         audios = audios[:1]
     for v in audios:
+        print("in audios")
+        print(v)
         mp = media_path + v[6:]
-        time += calculate_file_length(v[-3:], mp)
-    #utils.showInfo(str(time))
-    #utils.showInfo(str(len(audios)))
+        thisTime = calculate_file_length(v[-3:], mp)
+        time += thisTime
+        print(time, thisTime)
+    print("time", time)
+    print("audios", audios);
+#    utils.showInfo(str(time))
+#    utils.showInfo(str(len(audios)))
     return time
 
 
@@ -200,8 +209,12 @@ def set_time_limit():
             media_path = mw.col.path.rsplit('/', 1)[0] + '/collection.media/'
         time1 = helper(audio_fields_q)
         time2 = helper(audio_fields_a)
-        Config.time_limit_question = time1 + time2 / Config.audio_speed + int(Config.addition_time * 1000 + Config.addition_time_question * 1000) 
-        Config.time_limit_answer = (time2 / Config.audio_speed) * 2 + int(Config.addition_time * 1000 + Config.addition_time_answer * 1000)
+        print("time question ", time1)
+        print("time answer ", time2)
+        Config.time_limit_question = time1 + 300
+        Config.time_limit_answer = time2 + 300
+#        Config.time_limit_question = time1 + time2 / Config.audio_speed + int(Config.addition_time * 1000 + Config.addition_time_question * 1000) 
+#        Config.time_limit_answer = (time2 / Config.audio_speed) * 2 + int(Config.addition_time * 1000 + Config.addition_time_answer * 1000)
 
 
 def show_answer():
